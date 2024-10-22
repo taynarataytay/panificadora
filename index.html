@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panificadora</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Controle de Panificadora</h1>
+
+        <h2>Adicionar Produto</h2>
+        <form id="addProductForm" class="mb-4">
+            <div class="form-group">
+                <label for="productName">Nome do Produto:</label>
+                <input type="text" class="form-control" id="productName" required>
+            </div>
+            <div class="form-group">
+                <label for="productQuantity">Quantidade:</label>
+                <input type="number" class="form-control" id="productQuantity" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Adicionar</button>
+        </form>
+
+        <h2>Registrar Pedido</h2>
+        <form id="orderForm" class="mb-4">
+            <div class="form-group">
+                <label for="customerName">Cliente:</label>
+                <input type="text" class="form-control" id="customerName" required>
+            </div>
+            <div class="form-group">
+                <label for="orderProduct">Produto:</label>
+                <input type="text" class="form-control" id="orderProduct" required>
+            </div>
+            <div class="form-group">
+                <label for="orderQuantity">Quantidade:</label>
+                <input type="number" class="form-control" id="orderQuantity" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Registrar Pedido</button>
+        </form>
+
+        <h2>Pedidos Pendentes</h2>
+        <div id="pendingOrders"></div>
+    </div>
+
+    <script>
+        document.getElementById('addProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('productName').value;
+            const quantity = document.getElementById('productQuantity').value;
+
+            fetch('/api/produtos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('user:password') // Altere para o usuário e senha desejados
+                },
+                body: JSON.stringify({ nome: name, quantidade: quantity })
+            }).then(response => {
+                if (response.ok) {
+                    alert('Produto adicionado com sucesso!');
+                    document.getElementById('productName').value = '';
+                    document.getElementById('productQuantity').value = '';
+                } else {
+                    alert('Erro ao adicionar produto: ' + response.statusText);
+                }
+            });
+        });
+
+        document.getElementById('orderForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const client = document.getElementById('customerName').value;
+            const product = document.getElementById('orderProduct').value;
+            const quantity = document.getElementById('orderQuantity').value;
+
+            fetch('/api/pedidos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('user:password') // Altere para o usuário e senha desejados
+                },
+                body: JSON.stringify({ cliente: client, produto: product, quantidade: quantity })
+            }).then(response => {
+                if (response.ok) {
+                    alert('Pedido registrado com sucesso!');
+                    document.getElementById('customerName').value = '';
+                    document.getElementById('orderProduct').value = '';
+                    document.getElementById('orderQuantity').value = '';
+                    atualizarPedidosPendentes();
+                } else {
+                    alert('Erro ao registrar pedido: ' + response.statusText);
+                }
+            });
+        });
+
+        function atualizarPedidosPendentes() {
+            fetch('/api/pedidos/pendentes', {
+                headers: {
+                    'Authorization': 'Basic ' + btoa('user:password') // Altere para o usuário e senha desejados
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const ordersDiv = document.getElementById('pendingOrders');
+                ordersDiv.innerHTML = '';
+                data.forEach(pedido => {
+                    ordersDiv.innerHTML += `<p>${pedido.cliente} pediu ${pedido.quantidade} de ${pedido.produto}</p>`;
+                });
+            });
+        }
+
+        // Chamada inicial para listar pedidos pendentes
+        atualizarPedidosPendentes();
+    </script>
+</body>
+</html>
