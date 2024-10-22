@@ -1,0 +1,3 @@
+mkdir -p src/main/java/com/exemplo/panificadora
+mkdir -p src/main/resources/static
+
